@@ -1,6 +1,6 @@
 <?php
 /**
- * Description: Integrate wp-referral into bp-automatic-friends for create friendships from referral code
+ * Description: Wrapper for Mail_Mime pear package
  * Version: 0.2.00
  * Author: Alexander Demidov
  * Author Email: dimti@bk.ru
