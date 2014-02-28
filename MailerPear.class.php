@@ -1,7 +1,7 @@
 <?php
 /**
  * Description: Wrapper for Mail_Mime pear package
- * Version: 0.2.00
+ * Version: 0.2.x
  * Author: Alexander Demidov
  * Author Email: dimti@bk.ru
  * License: GPLv2 or later
@@ -274,7 +274,7 @@ class MailerPear extends Mailer
             }
         }
         if (!$is_enable_imap_extension || $is_something_wrong) {
-            if (preg_match('#(@.+)#', $address_string, $matches)) {
+            if (preg_match('#@(.+)#', $address_string, $matches)) {
                 $host = $matches[1];
             }
         }
