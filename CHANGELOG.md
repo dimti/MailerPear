@@ -1,6 +1,18 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+- Merge branch 'devel' [Alexander Demidov]
+
+0.2.02 (2014-02-28)
+-------------------
+
+- Correct email host helper. [Alexander Demidov]
+
+- Changelog on 0.2.01. [Alexander Demidov]
+
 0.2.01 (2014-02-28)
 -------------------
 
