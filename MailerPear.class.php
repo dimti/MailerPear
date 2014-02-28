@@ -20,6 +20,9 @@ class MailerPear extends Mailer
     const ATTACHMENT_C_TYPE = 'c_type';
     const ATTACHMENT_NAME = 'name';
     const ATTACHMENT_ISFILE = 'isfile';
+    const ATTACHMENT_CONTENT_ID = 'content_id';
+
+    const C_TYPE_DEFAULT = 'application/octet-stream';
 
     protected $headers = array();
 
@@ -45,9 +48,9 @@ class MailerPear extends Mailer
         $this->host = $host;
         $this->setDefaultHeaders();
         /**
-         * @desc hook for deine clrf
+         * @desc hook for define clrf
          * @author Stephen Bigelis
-         * @see http://pear.php.net/bugs/bug.php?id=12032
+         * @link http://pear.php.net/bugs/bug.php?id=12032
          */
         if (!defined('PHP_EOL')) define ('PHP_EOL', strtoupper(substr(PHP_OS,0,3) === 'WIN') ? "\r\n" : "\n");
         $this->clrf = PHP_EOL;
@@ -81,7 +84,26 @@ class MailerPear extends Mailer
         }
         if (!is_null($html_images)) {
             foreach ($html_images as $html_image_item) {
-                $mime->addHTMLImage($html_image_item);
+                if (is_array($html_image_item)) {
+                    if (!isset($html_image_item[self::ATTACHMENT_FILE])) {
+                        continue;
+                    }
+                    $mime->addHTMLImage(
+                        $html_image_item[self::ATTACHMENT_FILE],
+                        isset($html_image_item[self::ATTACHMENT_C_TYPE]) ? $html_image_item[self::ATTACHMENT_C_TYPE] : self::C_TYPE_DEFAULT,
+                        isset($html_image_item[self::ATTACHMENT_NAME]) ? $html_image_item[self::ATTACHMENT_NAME] : '',
+                        isset($html_image_item[self::ATTACHMENT_ISFILE]) ? $html_image_item[self::ATTACHMENT_ISFILE] : true,
+                        isset($html_image_item[self::ATTACHMENT_CONTENT_ID]) ? $html_image_item[self::ATTACHMENT_CONTENT_ID] : null
+                    );
+                } else {
+                    $mime->addHTMLImage(
+                        $html_image_item,
+                        self::C_TYPE_DEFAULT,
+                        '',
+                        true,
+                        basename($html_image_item)
+                    );
+                }
             }
         }
         if (!is_null($attachments)) {
@@ -92,7 +114,7 @@ class MailerPear extends Mailer
                     }
                     $mime->addAttachment(
                         $attachment_item[self::ATTACHMENT_FILE],
-                        isset($attachment_item[self::ATTACHMENT_C_TYPE]) ? $attachment_item[self::ATTACHMENT_C_TYPE] : 'application/octet-stream',
+                        isset($attachment_item[self::ATTACHMENT_C_TYPE]) ? $attachment_item[self::ATTACHMENT_C_TYPE] : self::C_TYPE_DEFAULT,
                         isset($attachment_item[self::ATTACHMENT_NAME]) ? $attachment_item[self::ATTACHMENT_NAME] : '',
                         isset($attachment_item[self::ATTACHMENT_ISFILE]) ? $attachment_item[self::ATTACHMENT_ISFILE] : true
                     );
@@ -229,5 +251,33 @@ class MailerPear extends Mailer
     public function setReturnPath($return_path)
     {
         $this->return_path = $return_path;
+    }
+
+    /**
+     * @param $address_string
+     * @return string
+     * @desc Need for adding to Content-ID header. old usage (@ex cid: uniqueid), now need usage like this: @ex cid: uniqueid@domain.my
+     * @link http://stackoverflow.com/questions/4018709/how-to-create-an-email-with-embedded-images-that-is-compatible-with-the-most-mai
+     */
+    public static function getHostFromAddress($address_string)
+    {
+        $is_enable_imap_extension = false;
+        $is_something_wrong = false;
+        $host = '';
+        if (function_exists('imap_rfc822_parse_adrlist')) {
+            $is_enable_imap_extension = true;
+            $address_array  = imap_rfc822_parse_adrlist($address_string, $address_string);
+            if (!is_array($address_array) || count($address_array) < 1) {
+                $is_something_wrong = true;
+            } else {
+                $host = $address_array[0]->host;
+            }
+        }
+        if (!$is_enable_imap_extension || $is_something_wrong) {
+            if (preg_match('#(@.+)#', $address_string, $matches)) {
+                $host = $matches[1];
+            }
+        }
+        return $host;
     }
 }
